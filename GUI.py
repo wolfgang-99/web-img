@@ -45,7 +45,7 @@ class SocketIOThread(QThread):
         try:
             # Replace with your actual Socket.IO server URL
             # For production: deploy server to Render, Railway, Heroku, etc.
-            self.sio.connect('http://localhost:5000')
+            self.sio.connect('https://web-img.onrender.com')
         except Exception as e:
             self.connection_error.emit(str(e))
             
@@ -273,7 +273,7 @@ class PhotoReceiverApp(QMainWindow):
         """Generate QR code with session URL"""
         # URL that phone will open - replace with your actual server URL
         # For production, deploy to Render, Heroku, Railway, etc.
-        server_url = f"https://your-server.com/upload?session={self.session_id}"
+        server_url = f"https://web-img.onrender.com/upload?session={self.session_id}"
         
         # For local testing with ngrok:
         # server_url = f"http://your-ngrok-url.ngrok.io/upload?session={self.session_id}"
