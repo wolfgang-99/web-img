@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Photo to Desktop</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+            text-align: center;
+        }
+        
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        
+        .status.connecting {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffeaa7;
+        }
+        
+        .camera-section {
+            margin: 20px 0;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background: #5a6268;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        #preview {
+            max-width: 100%;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 15px;
+            background: #28a745;
+            color: white;
+            text-align: center;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        
+        .file-input-label:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+        
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 14px;
+            animation: slideIn 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            text-align: center;
+        }
+        
+        .info strong {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📸 Send Photo to Desktop</h1>
+        <div id="status" class="status connecting">⏳ Connecting...</div>
+        <div id="messages"></div>
+        
+        <div class="camera-section">
+            <label for="fileInput" class="file-input-label">
+                📷 Take Photo / Choose Image
+            </label>
+            <input type="file" id="fileInput" accept="image/*" capture="environment">
+            
+            <img id="preview" alt="Preview">
+            
+            <button id="sendBtn" class="btn btn-primary" disabled>
+                <span id="sendBtnText">Send to Desktop</span>
+            </button>
+        </div>
+        
+        <div class="info">
+            Session ID: <strong>{{ session_id[:16] }}...</strong>
+        </div>
+    </div>
+
+    <script>
+        const sessionId = "{{ session_id }}";
+        const socket = io({
+            transports: ['websocket', 'polling'],
+            reconnection: true,
+            reconnectionDelay: 1000,
+            reconnectionAttempts: 5
+        });
+        
+        let selectedFile = null;
+        
+        const statusDiv = document.getElementById('status');
+        const messagesDiv = document.getElementById('messages');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const sendBtn = document.getElementById('sendBtn');
+        const sendBtnText = document.getElementById('sendBtnText');
+        
+        // Socket.IO connection events
+        socket.on('connect', () => {
+            console.log('Connected to server');
+            statusDiv.className = 'status connected';
+            statusDiv.textContent = '✅ Connected to Desktop';
+            socket.emit('register_mobile', { session_id: sessionId });
+            showMessage('Connected successfully', 'success');
+        });
+        
+        socket.on('disconnect', () => {
+            console.log('Disconnected from server');
+            statusDiv.className = 'status disconnected';
+            statusDiv.textContent = '❌ Disconnected';
+            showMessage('Connection lost. Trying to reconnect...', 'error');
+        });
+        
+        socket.on('connect_error', (error) => {
+            console.error('Connection error:', error);
+            statusDiv.className = 'status disconnected';
+            statusDiv.textContent = '❌ Connection Error';
+            showMessage('Unable to connect to server', 'error');
+        });
+        
+        socket.on('reconnect', (attemptNumber) => {
+            console.log('Reconnected after', attemptNumber, 'attempts');
+            showMessage('Reconnected successfully', 'success');
+        });
+        
+        socket.on('upload_success', () => {
+            showMessage('✅ Photo sent successfully!', 'success');
+            selectedFile = null;
+            preview.style.display = 'none';
+            sendBtn.disabled = true;
+            fileInput.value = '';
+            sendBtnText.textContent = 'Send to Desktop';
+        });
+        
+        socket.on('upload_error', (data) => {
+            showMessage('❌ Error: ' + data.message, 'error');
+            sendBtn.disabled = false;
+            sendBtnText.textContent = 'Send to Desktop';
+        });
+        
+        // File selection
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // Validate file type
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                showMessage('⚠️ Please select a valid image (JPEG, PNG, WebP)', 'error');
+                return;
+            }
+            
+            // Validate file size (10MB)
+            const maxSize = 10 * 1024 * 1024;
+            if (file.size > maxSize) {
+                const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                showMessage(`⚠️ File is too large (${sizeMB}MB). Maximum size is 10MB`, 'error');
+                return;
+            }
+            
+            selectedFile = file;
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                sendBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
+            
+            const sizeKB = (file.size / 1024).toFixed(1);
+            showMessage(`✅ Photo ready to send (${sizeKB} KB)`, 'info');
+        });
+        
+        // Send photo
+        sendBtn.addEventListener('click', () => {
+            if (!selectedFile) return;
+            
+            sendBtn.disabled = true;
+            sendBtnText.innerHTML = '<span class="spinner"></span> Sending...';
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const base64Data = e.target.result.split(',')[1];
+                
+                console.log('Sending photo to session:', sessionId);
+                socket.emit('upload_photo', {
+                    session_id: sessionId,
+                    photo: base64Data,
+                    mime_type: selectedFile.type,
+                    file_size: selectedFile.size
+                });
+            };
+            reader.onerror = () => {
+                showMessage('❌ Failed to read file', 'error');
+                sendBtn.disabled = false;
+                sendBtnText.textContent = 'Send to Desktop';
+            };
+            reader.readAsDataURL(selectedFile);
+        });
+        
+        function showMessage(text, type) {
+            const msg = document.createElement('div');
+            msg.className = `message ${type}`;
+            msg.textContent = text;
+            messagesDiv.appendChild(msg);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                msg.style.animation = 'slideIn 0.3s reverse';
+                setTimeout(() => msg.remove(), 300);
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
