@@ -151,6 +151,6 @@ def handle_upload(data):
         emit('upload_error', {'message': 'Failed to send photo to desktop'})
 
 if __name__ == '__main__':
-    # port = int(os.getenv('PORT', 5000))
-    # logger.info(f"Starting server on port {port}")
-    socketio.run(app, host='0.0.0.0', debug=True)
+    port = int(os.getenv('PORT', 5000))
+    logger.info(f"Starting server on port {port}")
+    socketio.run(app, host='0.0.0.0', port=port, debug=True)
