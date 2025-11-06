@@ -19,7 +19,10 @@ app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB max file size
 
 CORS(app, resources={r"/*": {"origins": "*"}})
 # socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet', logger=True, engineio_logger=True) # for high concurrency/traffic
-socketio = SocketIO(app, cors_allowed_origins="*", logger=True, engineio_logger=True)
+socketio = SocketIO( app, cors_allowed_origins="*", logger=True, engineio_logger=True, 
+                    max_http_buffer_size=15 * 1024 * 1024,  # 15MB max payload size
+                    ping_timeout=60,ping_interval=25
+                    )
 
 # Store active sessions: {session_id: desktop_sid}
 active_sessions = {}
