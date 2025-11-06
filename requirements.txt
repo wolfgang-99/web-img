@@ -10,6 +10,6 @@ flask-socketio==5.3.5
 flask-cors==4.0.0
 python-socketio==5.10.0
 # eventlet==0.36.1
-gevent==24.2.1
-gevent-websocket==0.10.1
+# gevent==24.2.1
+# gevent-websocket==0.10.1
 gunicorn == 23.0.0
