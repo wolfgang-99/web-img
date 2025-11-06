@@ -9,5 +9,5 @@ flask==3.0.0
 flask-socketio==5.3.5
 flask-cors==4.0.0
 python-socketio==5.10.0
-eventlet==0.33.3
+eventlet==0.36.1
 gunicorn == 23.0.0
