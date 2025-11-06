@@ -153,4 +153,4 @@ def handle_upload(data):
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
     logger.info(f"Starting server on port {port}")
-    socketio.run(app, host='0.0.0.0', port=port, debug=True)
+    socketio.run(app, host='0.0.0.0', port=port, debug=True, allow_unsafe_werkzeug=True)
