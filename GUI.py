@@ -109,7 +109,7 @@ class PhotoReceiverApp(QMainWindow):
             QTextEdit {
                 border: 1px solid #e0e0e0;
                 border-radius: 4px;
-                background-color: #fafafa;
+                background-color: black;
                 padding: 8px;
                 font-family: 'Courier New', monospace;
                 font-size: 11px;
@@ -284,6 +284,7 @@ class PhotoReceiverApp(QMainWindow):
         
         img = qr.make_image(fill_color="black", back_color="white")
         img = img.resize((280, 280))
+        img.show()
         
         # Convert PIL image to QPixmap
         img_byte_arr = io.BytesIO()
