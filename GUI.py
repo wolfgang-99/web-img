@@ -169,6 +169,7 @@ class PhotoReceiverApp(QMainWindow):
             padding: 15px;
             border-radius: 8px;
         """)
+        
         self.generate_qr_code()
         qr_layout.addWidget(self.qr_label)
         
@@ -185,13 +186,14 @@ class PhotoReceiverApp(QMainWindow):
         session_title = QLabel("Session ID:")
         session_title.setStyleSheet("font-weight: normal; font-size: 12px; color: #666;")
         self.session_label = QLabel(f"{self.session_id[:20]}...")
-        self.session_label.setStyleSheet("""
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            background-color: #f0f0f0;
-            padding: 8px;
-            border-radius: 4px;
-        """)
+        # self.session_label.setStyleSheet("""
+        #     font-family: 'Courier New', monospace;
+        #     font-size: 11px;
+        #     background-color: #f0f0f0;
+        #     color: #666;
+        #     padding: 8px;
+        #     border-radius: 4px;
+        # """)
         self.session_label.setWordWrap(True)
         session_container.addWidget(session_title)
         session_container.addWidget(self.session_label)
@@ -202,14 +204,14 @@ class PhotoReceiverApp(QMainWindow):
         status_title = QLabel("Status:")
         status_title.setStyleSheet("font-weight: normal; font-size: 12px; color: #666;")
         self.status_label = QLabel("⏳ Connecting...")
-        self.status_label.setStyleSheet("""
-            font-size: 13px;
-            font-weight: bold;
-            color: #ff9800;
-            background-color: #fff3e0;
-            padding: 8px;
-            border-radius: 4px;
-        """)
+        # self.status_label.setStyleSheet("""
+        #     font-size: 13px;
+        #     font-weight: bold;
+        #     color: #ff9800;
+        #     background-color: #fff3e0;
+        #     padding: 8px;
+        #     border-radius: 4px;
+        # """)
         status_container.addWidget(status_title)
         status_container.addWidget(self.status_label)
         info_layout.addLayout(status_container)
@@ -219,13 +221,13 @@ class PhotoReceiverApp(QMainWindow):
         save_title = QLabel("Save Location:")
         save_title.setStyleSheet("font-weight: normal; font-size: 12px; color: #666;")
         save_path = QLabel(os.path.abspath(self.save_dir))
-        save_path.setStyleSheet("""
-            font-size: 10px;
-            color: #666;
-            background-color: #f0f0f0;
-            padding: 8px;
-            border-radius: 4px;
-        """)
+        # save_path.setStyleSheet("""
+        #     font-size: 10px;
+        #     color: #666;
+        #     background-color: #f0f0f0;
+        #     padding: 8px;
+        #     border-radius: 4px;
+        # """)
         save_path.setWordWrap(True)
         save_container.addWidget(save_title)
         save_container.addWidget(save_path)
@@ -292,8 +294,14 @@ class PhotoReceiverApp(QMainWindow):
         img_byte_arr.seek(0)
         
         qimage = QImage.fromData(img_byte_arr.getvalue())
-        pixmap = QPixmap.fromImage(qimage)
-        self.qr_label.setPixmap(pixmap)
+
+        # Scale QR code to fit label
+        target_width = self.qr_label.width()
+        target_height = self.qr_label.height()
+        original_pixmap = QPixmap.fromImage(qimage)
+        scaled_pixmap = original_pixmap.scaled(150, 150, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+
+        self.qr_label.setPixmap(scaled_pixmap)
         
     def on_connected(self):
         """Handle successful connection"""
